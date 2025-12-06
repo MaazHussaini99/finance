@@ -75,12 +75,15 @@ npm run install-all
    TELLER_CERT_PATH=./certs/certificate.pem
    TELLER_KEY_PATH=./certs/private_key.pem
    TELLER_APPLICATION_ID=app_your_id_here
-   TELLER_ENV=sandbox
+   TELLER_ENV=production
    PORT=3001
    NODE_ENV=development
    ```
 
-   **Note:** Use `sandbox` for testing or `production` for real data
+   **Important:**
+   - Use `TELLER_ENV=production` to connect your REAL bank accounts (Bank of America, Chase, Discover, Amex, etc.)
+   - Use `TELLER_ENV=sandbox` only for testing with fake data
+   - This app is designed for local personal use with production mode
 
 ### 3. Start the Application
 
@@ -107,18 +110,22 @@ The application will be available at:
 
 ## Usage
 
-### Connecting Your Accounts
+### Connecting Your Accounts (Production Mode)
 
 1. Open http://localhost:3000
 2. Click **"Connect Accounts"** tab
 3. Click **"+ Connect New Account"**
-4. A Teller Connect window will open
+4. A Teller Connect window will open in a popup
 5. Search for your bank (e.g., "Chase", "Bank of America", "Discover", "Amex")
-6. Login with your real bank credentials (handled securely by Teller)
-7. After successful connection, you'll receive an access token
-8. Copy the access token and paste it in the app
-9. Click **"Save Token"** to complete the connection
-10. Your transactions will sync automatically!
+6. **Login with your REAL bank credentials** (handled securely by Teller - never stored in this app)
+7. Complete any multi-factor authentication if required by your bank
+8. After successful authentication, Teller will display an access token
+9. Copy the access token from the Teller popup
+10. Paste it in the input field in the app
+11. Click **"Save Token"** to complete the connection
+12. Your transactions will sync automatically!
+
+**Security Note:** Your bank username and password are NEVER stored in this application. Teller handles all authentication securely using bank-level encryption. Only the access token is stored locally to fetch your transactions.
 
 ### Syncing Transactions
 

@@ -177,17 +177,18 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
       )}
 
       <div style={{ marginBottom: '2rem', padding: '1rem', background: '#e3f2fd', borderRadius: '8px', border: '1px solid #2196f3' }}>
-        <h3 style={{ marginBottom: '0.5rem', color: '#1976d2' }}>How to Connect:</h3>
+        <h3 style={{ marginBottom: '0.5rem', color: '#1976d2' }}>How to Connect (Production Mode):</h3>
         <ol style={{ paddingLeft: '1.5rem', lineHeight: '1.8' }}>
           <li>Click "Connect New Account" to open Teller Connect</li>
-          <li>Sign up for a free Teller account at <a href="https://teller.io" target="_blank" rel="noopener noreferrer">teller.io</a></li>
-          <li>Get your API key from the Teller dashboard</li>
-          <li>Use Teller Connect to link your bank (BofA, Chase, Discover, Amex, etc.)</li>
-          <li>Copy the access token and paste it above</li>
-          <li>Click "Save Token" to connect</li>
+          <li>Search for your bank (Bank of America, Chase, Discover, Amex, etc.)</li>
+          <li><strong>Login with your REAL bank credentials</strong> (handled securely by Teller)</li>
+          <li>After successful authentication, Teller will provide an access token</li>
+          <li>Copy the access token from the popup</li>
+          <li>Paste it in the input field above and click "Save Token"</li>
+          <li>Your transactions will sync automatically!</li>
         </ol>
         <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-          <strong>Note:</strong> Teller offers 100 free connections for personal use. Your credentials are handled securely by Teller.
+          <strong>Security:</strong> Your bank credentials are never stored in this app. Teller uses bank-level encryption and OAuth when available. This app runs locally on your machine only.
         </p>
       </div>
 
