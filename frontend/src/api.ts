@@ -83,10 +83,8 @@ export const api = {
   },
 
   teller: {
-    createEnrollment: async (): Promise<{ enrollment_url: string }> => {
-      const response = await axios.post(`${API_BASE}/teller/create_enrollment`)
-      return response.data
-    },
+    // Note: Enrollment is now handled client-side via TellerConnect.setup()
+    // We only need to save the access token that Teller Connect provides
 
     saveEnrollment: async (accessToken: string, enrollmentId?: string): Promise<{ success: boolean; accounts: any[] }> => {
       const response = await axios.post(`${API_BASE}/teller/save_enrollment`, {

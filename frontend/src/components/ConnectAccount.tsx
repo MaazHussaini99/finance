@@ -1,6 +1,29 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api'
 
+// Declare TellerConnect global type
+declare global {
+  interface Window {
+    TellerConnect: {
+      setup: (config: TellerConnectConfig) => TellerConnectInstance
+    }
+  }
+}
+
+interface TellerConnectConfig {
+  applicationId: string
+  environment?: 'sandbox' | 'development' | 'production'
+  products: string[]
+  onSuccess: (enrollment: { accessToken: string; enrollment: any; user: any }) => void
+  onExit?: () => void
+  onInit?: () => void
+}
+
+interface TellerConnectInstance {
+  open: () => void
+  close: () => void
+}
+
 interface ConnectAccountProps {
   onSuccess?: () => void
 }
@@ -9,11 +32,12 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
   const [accounts, setAccounts] = useState<any[]>([])
   const [syncing, setSyncing] = useState<number | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [showTokenInput, setShowTokenInput] = useState(false)
-  const [accessToken, setAccessToken] = useState('')
+  const [tellerConnect, setTellerConnect] = useState<TellerConnectInstance | null>(null)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   useEffect(() => {
     loadAccounts()
+    initializeTellerConnect()
   }, [])
 
   const loadAccounts = async () => {
@@ -25,36 +49,69 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
     }
   }
 
-  const handleConnectClick = async () => {
-    try {
-      const { enrollment_url } = await api.teller.createEnrollment()
-      window.open(enrollment_url, '_blank', 'width=500,height=700')
-      setShowTokenInput(true)
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: 'Failed to create enrollment. Make sure TELLER_APPLICATION_ID is set in backend/.env'
-      })
-    }
+  const initializeTellerConnect = () => {
+    // Wait for TellerConnect library to load
+    const checkTellerConnect = setInterval(() => {
+      if (window.TellerConnect) {
+        clearInterval(checkTellerConnect)
+
+        try {
+          const tc = window.TellerConnect.setup({
+            applicationId: 'app_plt7tkg920bf7jh9ba000',
+            environment: 'production', // Use production for real bank accounts
+            products: ['transactions', 'balance', 'identity'],
+            onSuccess: async (enrollment) => {
+              console.log('Teller Connect successful:', enrollment)
+              setIsConnecting(true)
+              setMessage({ type: 'success', text: 'Connecting account...' })
+
+              try {
+                await api.teller.saveEnrollment(enrollment.accessToken)
+                setMessage({ type: 'success', text: 'Account connected successfully!' })
+                await loadAccounts()
+                onSuccess?.()
+              } catch (error: any) {
+                console.error('Error saving enrollment:', error)
+                setMessage({
+                  type: 'error',
+                  text: error.response?.data?.error || 'Failed to save account connection'
+                })
+              } finally {
+                setIsConnecting(false)
+              }
+            },
+            onExit: () => {
+              console.log('User closed Teller Connect')
+              setIsConnecting(false)
+            },
+            onInit: () => {
+              console.log('Teller Connect initialized')
+            }
+          })
+
+          setTellerConnect(tc)
+        } catch (error) {
+          console.error('Error initializing Teller Connect:', error)
+          setMessage({
+            type: 'error',
+            text: 'Failed to initialize Teller Connect. Please refresh the page.'
+          })
+        }
+      }
+    }, 100)
+
+    // Clear interval after 10 seconds if TellerConnect doesn't load
+    setTimeout(() => clearInterval(checkTellerConnect), 10000)
   }
 
-  const handleSaveToken = async () => {
-    if (!accessToken.trim()) {
-      setMessage({ type: 'error', text: 'Please enter an access token' })
-      return
-    }
-
-    try {
-      await api.teller.saveEnrollment(accessToken.trim())
-      setMessage({ type: 'success', text: 'Account connected successfully!' })
-      setAccessToken('')
-      setShowTokenInput(false)
-      loadAccounts()
-      onSuccess?.()
-    } catch (error: any) {
+  const handleConnectClick = () => {
+    if (tellerConnect) {
+      setMessage(null)
+      tellerConnect.open()
+    } else {
       setMessage({
         type: 'error',
-        text: error.response?.data?.error || 'Failed to connect account'
+        text: 'Teller Connect is not ready. Please refresh the page.'
       })
     }
   }
@@ -124,71 +181,35 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
           className="upload-btn"
           onClick={handleConnectClick}
           style={{ marginRight: '1rem' }}
+          disabled={isConnecting || !tellerConnect}
         >
-          + Connect New Account
+          {isConnecting ? 'Connecting...' : '+ Connect New Account'}
         </button>
 
         {accounts.length > 0 && (
           <button
             className="upload-btn"
             onClick={handleSyncAll}
-            disabled={syncing !== null}
+            disabled={syncing !== null || isConnecting}
           >
             {syncing === -1 ? 'Syncing All...' : 'Sync All Accounts'}
           </button>
         )}
       </div>
 
-      {showTokenInput && (
-        <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f8f9fa', borderRadius: '8px' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Enter Your Teller Access Token</h3>
-          <p style={{ marginBottom: '1rem', color: '#666' }}>
-            After connecting your account in the Teller popup, you'll receive an access token. Paste it here:
-          </p>
-          <input
-            type="text"
-            value={accessToken}
-            onChange={(e) => setAccessToken(e.target.value)}
-            placeholder="test_token_..."
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              marginBottom: '1rem',
-              border: '2px solid #ddd',
-              borderRadius: '8px',
-              fontSize: '1rem'
-            }}
-          />
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="upload-btn" onClick={handleSaveToken}>
-              Save Token
-            </button>
-            <button
-              className="edit-btn"
-              onClick={() => {
-                setShowTokenInput(false)
-                setAccessToken('')
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
       <div style={{ marginBottom: '2rem', padding: '1rem', background: '#e3f2fd', borderRadius: '8px', border: '1px solid #2196f3' }}>
         <h3 style={{ marginBottom: '0.5rem', color: '#1976d2' }}>How to Connect (Production Mode):</h3>
         <ol style={{ paddingLeft: '1.5rem', lineHeight: '1.8' }}>
-          <li>Click "Connect New Account" to open Teller Connect</li>
+          <li>Click <strong>"+ Connect New Account"</strong> button above</li>
+          <li>Teller Connect window will open</li>
           <li>Search for your bank (Bank of America, Chase, Discover, Amex, etc.)</li>
           <li><strong>Login with your REAL bank credentials</strong> (handled securely by Teller)</li>
-          <li>After successful authentication, Teller will provide an access token</li>
-          <li>Copy the access token from the popup</li>
-          <li>Paste it in the input field above and click "Save Token"</li>
-          <li>Your transactions will sync automatically!</li>
+          <li>Complete any multi-factor authentication if required</li>
+          <li>Select which accounts to share (or all accounts will be connected automatically)</li>
+          <li>Your account will connect automatically and transactions will sync!</li>
         </ol>
         <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-          <strong>Security:</strong> Your bank credentials are never stored in this app. Teller uses bank-level encryption and OAuth when available. This app runs locally on your machine only.
+          <strong>Security:</strong> Your bank credentials are NEVER stored in this app. Teller handles all authentication using bank-level 256-bit encryption. Only an access token is stored locally. This app runs entirely on your machine.
         </p>
       </div>
 

@@ -5,19 +5,8 @@ const crypto = require('crypto');
 
 const router = express.Router();
 
-// Teller Connect - Generate enrollment URL
-router.post('/create_enrollment', async (req, res) => {
-  try {
-    // For Teller, we use Teller Connect which is a redirect-based flow
-    // The client will handle the redirect and send us the access token
-    res.json({
-      enrollment_url: `https://teller.io/connect?application_id=${process.env.TELLER_APPLICATION_ID}`
-    });
-  } catch (error) {
-    console.error('Error creating enrollment:', error);
-    res.status(500).json({ error: 'Failed to create enrollment' });
-  }
-});
+// Note: Teller Connect is now handled client-side via TellerConnect.setup()
+// The enrollment flow happens in the browser, and we just receive the access token
 
 // Exchange enrollment for access token and save accounts
 router.post('/save_enrollment', async (req, res) => {

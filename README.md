@@ -115,17 +115,14 @@ The application will be available at:
 1. Open http://localhost:3000
 2. Click **"Connect Accounts"** tab
 3. Click **"+ Connect New Account"**
-4. A Teller Connect window will open in a popup
+4. Teller Connect window will open
 5. Search for your bank (e.g., "Chase", "Bank of America", "Discover", "Amex")
 6. **Login with your REAL bank credentials** (handled securely by Teller - never stored in this app)
 7. Complete any multi-factor authentication if required by your bank
-8. After successful authentication, Teller will display an access token
-9. Copy the access token from the Teller popup
-10. Paste it in the input field in the app
-11. Click **"Save Token"** to complete the connection
-12. Your transactions will sync automatically!
+8. Select which accounts to share (or all will be connected automatically)
+9. **That's it!** Your account connects automatically and transactions sync immediately
 
-**Security Note:** Your bank username and password are NEVER stored in this application. Teller handles all authentication securely using bank-level encryption. Only the access token is stored locally to fetch your transactions.
+**Security Note:** Your bank username and password are NEVER stored in this application. Teller Connect handles all authentication client-side using bank-level 256-bit encryption. Only an access token is stored locally to fetch your transactions. The entire authentication flow is handled securely by Teller's official JavaScript library.
 
 ### Syncing Transactions
 
@@ -221,12 +218,13 @@ finance/
 ## API Endpoints
 
 ### Teller Integration
-- `POST /api/teller/create_enrollment` - Generate Teller enrollment URL
-- `POST /api/teller/save_enrollment` - Save Teller access token and fetch accounts
+- `POST /api/teller/save_enrollment` - Save Teller access token (provided by TellerConnect.setup()) and fetch accounts
 - `GET /api/teller/accounts` - Get all connected accounts
 - `POST /api/teller/sync/:accountId` - Sync transactions for an account
 - `POST /api/teller/sync_all` - Sync all connected accounts
 - `DELETE /api/teller/account/:accountId` - Disconnect an account
+
+**Note:** Teller Connect enrollment is handled client-side using the official Teller Connect JavaScript library. The enrollment URL generation endpoint is no longer needed.
 
 ### Transactions
 - `GET /api/transactions` - Get all transactions (with optional filters)
