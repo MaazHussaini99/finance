@@ -82,36 +82,37 @@ export const api = {
     }
   },
 
-  plaid: {
-    createLinkToken: async (): Promise<{ link_token: string }> => {
-      const response = await axios.post(`${API_BASE}/plaid/create_link_token`)
+  teller: {
+    createEnrollment: async (): Promise<{ enrollment_url: string }> => {
+      const response = await axios.post(`${API_BASE}/teller/create_enrollment`)
       return response.data
     },
 
-    exchangePublicToken: async (publicToken: string): Promise<{ success: boolean; accounts: any[] }> => {
-      const response = await axios.post(`${API_BASE}/plaid/exchange_public_token`, {
-        public_token: publicToken
+    saveEnrollment: async (accessToken: string, enrollmentId?: string): Promise<{ success: boolean; accounts: any[] }> => {
+      const response = await axios.post(`${API_BASE}/teller/save_enrollment`, {
+        access_token: accessToken,
+        enrollment_id: enrollmentId
       })
       return response.data
     },
 
     getAccounts: async (): Promise<any[]> => {
-      const response = await axios.get(`${API_BASE}/plaid/accounts`)
+      const response = await axios.get(`${API_BASE}/teller/accounts`)
       return response.data
     },
 
-    syncAccount: async (accountId: number): Promise<{ success: boolean; added: number; modified: number; removed: number }> => {
-      const response = await axios.post(`${API_BASE}/plaid/sync/${accountId}`)
+    syncAccount: async (accountId: number): Promise<{ success: boolean; added: number; total: number }> => {
+      const response = await axios.post(`${API_BASE}/teller/sync/${accountId}`)
       return response.data
     },
 
     syncAll: async (): Promise<{ success: boolean; results: any[] }> => {
-      const response = await axios.post(`${API_BASE}/plaid/sync_all`)
+      const response = await axios.post(`${API_BASE}/teller/sync_all`)
       return response.data
     },
 
     disconnectAccount: async (accountId: number): Promise<{ success: boolean; message: string }> => {
-      const response = await axios.delete(`${API_BASE}/plaid/account/${accountId}`)
+      const response = await axios.delete(`${API_BASE}/teller/account/${accountId}`)
       return response.data
     }
   }

@@ -1,34 +1,35 @@
 # Transaction Categorizer
 
-A full-stack web application for automatically categorizing and tracking financial transactions from multiple bank accounts and credit cards with real-time synchronization.
+A full-stack personal finance web application for automatically categorizing and tracking transactions from multiple bank accounts and credit cards with real-time API synchronization powered by **Teller.io**.
 
 ## Features
 
-- **Real-time Bank Integration**: Connect Bank of America, Chase, Discover, American Express, and 11,000+ other institutions via Plaid
+- **Real-time Bank Integration**: Connect Bank of America, Chase, Discover, American Express, and 11,000+ other institutions via Teller API
 - **Automatic Categorization**: Smart categorization engine that automatically sorts transactions into predefined categories
 - **Monthly Breakdown**: View spending by category for each month
 - **Dashboard**: Comprehensive overview of all transactions with editing capabilities
 - **CSV Upload**: Fallback option to manually upload transaction CSV files
 - **Auto-sync**: Transactions automatically sync every 6 hours
+- **Duplicate Detection**: Prevents importing the same transaction twice
 
 ## Tech Stack
 
 **Backend:**
 - Node.js + Express
 - SQLite database
-- Plaid API for bank connections
+- Teller API for bank connections
 - Natural language processing for categorization
 
 **Frontend:**
 - React + TypeScript
 - Vite for build tooling
-- React Plaid Link for account connections
+- Axios for API calls
 - Recharts for visualizations
 
 ## Prerequisites
 
 - Node.js 18+ and npm
-- A Plaid account (free for development)
+- A Teller account (free for up to 100 connections)
 
 ## Setup Instructions
 
@@ -39,25 +40,28 @@ cd finance
 npm run install-all
 ```
 
-### 2. Set Up Plaid API Credentials
+### 2. Set Up Teller API Credentials
 
-1. Sign up for a free Plaid account at https://dashboard.plaid.com/signup
-2. Get your credentials:
-   - Go to Team Settings > Keys
-   - Copy your `client_id` and `sandbox` secret
-3. Create a `.env` file in the `backend` directory:
+1. **Sign up for Teller:**
+   - Visit: https://teller.io
+   - Create a free account
+
+2. **Get your API key:**
+   - Go to your Teller dashboard
+   - Navigate to API Keys section
+   - Copy your API key
+
+3. **Create environment file:**
 
 ```bash
 cd backend
 cp .env.example .env
 ```
 
-4. Edit `backend/.env` and add your Plaid credentials:
+4. **Edit `backend/.env` and add your Teller credentials:**
 
 ```env
-PLAID_CLIENT_ID=your_client_id_here
-PLAID_SECRET=your_sandbox_secret_here
-PLAID_ENV=sandbox
+TELLER_API_KEY=your_teller_api_key_here
 PORT=3001
 NODE_ENV=development
 ```
@@ -89,30 +93,31 @@ The application will be available at:
 
 ### Connecting Your Accounts
 
-1. Click "Connect Accounts" in the navigation
-2. Click "+ Connect New Account"
-3. Search for your bank (e.g., "Chase", "Bank of America")
-4. Login with your credentials (handled securely by Plaid)
-5. Select which accounts to connect
-6. Click "Continue" to complete the connection
-
-**Note:** In sandbox mode, use these test credentials:
-- Username: `user_good`
-- Password: `pass_good`
+1. Open http://localhost:3000
+2. Click **"Connect Accounts"** tab
+3. Click **"+ Connect New Account"**
+4. A Teller Connect window will open
+5. Search for your bank (e.g., "Chase", "Bank of America", "Discover", "Amex")
+6. Login with your real bank credentials (handled securely by Teller)
+7. After successful connection, you'll receive an access token
+8. Copy the access token and paste it in the app
+9. Click **"Save Token"** to complete the connection
+10. Your transactions will sync automatically!
 
 ### Syncing Transactions
 
 - **Automatic**: Transactions sync every 6 hours automatically
 - **Manual**: Click "Sync" next to any account or "Sync All Accounts"
-- Initial sync pulls up to 2 years of transaction history
+- Initial sync pulls up to 500 most recent transactions
+- Duplicate detection prevents re-importing the same transactions
 
 ### Viewing Your Data
 
 - **Dashboard**: See all transactions, category summaries, and edit categories
-- **Monthly Breakdown**: View spending by category for each month
+- **Monthly Breakdown**: View spending by category for each month with visual breakdowns
 - **Upload CSV**: Alternative method to import transactions via CSV files
 
-### Supported Institutions (via Plaid)
+### Supported Institutions (via Teller)
 
 - Bank of America
 - Chase
@@ -123,30 +128,20 @@ The application will be available at:
 - Capital One
 - And 11,000+ more institutions
 
-## Environment Modes
+## Teller API
 
-### Sandbox Mode (Development)
-- Use test credentials to simulate bank connections
-- No real financial data
-- Free to use
-- Perfect for testing
+### Pricing
 
-### Development Mode (Real Data)
-- Connect to real bank accounts
-- Requires Plaid Development tier (free)
-- Limited to 100 connected items
-- Ideal for personal use
+- **Free Tier**: Up to 100 connections (perfect for personal use!)
+- **Paid Plans**: Available for larger scale applications
 
-### Production Mode
-- Full production deployment
-- Requires Plaid Production tier (paid)
-- Unlimited connections
-- Required for public apps
+### Features
 
-To switch modes, change `PLAID_ENV` in `backend/.env`:
-```env
-PLAID_ENV=sandbox    # or development or production
-```
+- Real-time transaction data
+- Secure OAuth-based authentication
+- Bank-level security (256-bit encryption)
+- No screen scraping - uses official bank APIs when available
+- Automatic daily updates
 
 ## Categories
 
@@ -163,7 +158,7 @@ The app includes these default categories:
 - 💰 Income
 - 📌 Other
 
-You can add custom categories or edit existing ones through the API.
+You can manually edit categories for any transaction.
 
 ## Project Structure
 
@@ -173,21 +168,21 @@ finance/
 │   ├── src/
 │   │   ├── index.js              # Main server file
 │   │   ├── database.js           # SQLite database setup
-│   │   ├── plaidClient.js        # Plaid API client
+│   │   ├── tellerClient.js       # Teller API client
 │   │   ├── categorizer.js        # Transaction categorization engine
 │   │   ├── parsers/
 │   │   │   └── csvParser.js      # CSV parsing for manual uploads
 │   │   └── routes/
 │   │       ├── transactions.js   # Transaction API endpoints
 │   │       ├── categories.js     # Category API endpoints
-│   │       └── plaid.js          # Plaid integration endpoints
+│   │       └── teller.js         # Teller integration endpoints
 │   ├── data/                     # SQLite database storage
 │   ├── package.json
 │   └── .env                      # Environment variables (create this)
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── ConnectAccount.tsx   # Plaid Link integration
+│   │   │   ├── ConnectAccount.tsx   # Teller connection UI
 │   │   │   ├── Dashboard.tsx        # Main dashboard view
 │   │   │   ├── MonthlyBreakdown.tsx # Monthly analysis view
 │   │   │   └── Upload.tsx           # CSV upload component
@@ -202,16 +197,16 @@ finance/
 
 ## API Endpoints
 
-### Plaid Integration
-- `POST /api/plaid/create_link_token` - Generate Plaid Link token
-- `POST /api/plaid/exchange_public_token` - Exchange public token for access token
-- `GET /api/plaid/accounts` - Get all connected accounts
-- `POST /api/plaid/sync/:accountId` - Sync transactions for an account
-- `POST /api/plaid/sync_all` - Sync all connected accounts
-- `DELETE /api/plaid/account/:accountId` - Disconnect an account
+### Teller Integration
+- `POST /api/teller/create_enrollment` - Generate Teller enrollment URL
+- `POST /api/teller/save_enrollment` - Save Teller access token and fetch accounts
+- `GET /api/teller/accounts` - Get all connected accounts
+- `POST /api/teller/sync/:accountId` - Sync transactions for an account
+- `POST /api/teller/sync_all` - Sync all connected accounts
+- `DELETE /api/teller/account/:accountId` - Disconnect an account
 
 ### Transactions
-- `GET /api/transactions` - Get all transactions
+- `GET /api/transactions` - Get all transactions (with optional filters)
 - `GET /api/transactions/stats` - Get category statistics
 - `GET /api/transactions/monthly` - Get monthly breakdown
 - `POST /api/transactions/upload` - Upload CSV file
@@ -226,20 +221,20 @@ finance/
 
 ## Security
 
-- All bank credentials are handled securely by Plaid (never stored in this app)
-- Access tokens are stored encrypted in the SQLite database
-- Plaid uses bank-level 256-bit encryption
-- OAuth connections are used when available
-- Multi-factor authentication is supported
+- All bank credentials are handled securely by Teller (never stored in this app)
+- Access tokens are stored in local SQLite database
+- Teller uses bank-level 256-bit encryption
+- OAuth connections when available
+- Multi-factor authentication supported
 
 ## Troubleshooting
 
-### Plaid Connection Issues
+### Teller Connection Issues
 
-If you see "Failed to initialize Plaid":
-1. Check that your `.env` file has correct credentials
-2. Verify `PLAID_CLIENT_ID` and `PLAID_SECRET` are set
-3. Ensure you're using the correct environment (`sandbox`, `development`, or `production`)
+If you see "Failed to save enrollment":
+1. Check that your `.env` file has the correct `TELLER_API_KEY`
+2. Verify your Teller account is active
+3. Ensure the access token was copied correctly
 
 ### Database Issues
 
@@ -274,6 +269,18 @@ npm start
 
 The built frontend will be served by the Express backend at http://localhost:3001
 
+## Teller vs Plaid
+
+This app uses **Teller** instead of Plaid for several reasons:
+
+| Feature | Teller | Plaid |
+|---------|--------|-------|
+| Free Tier | ✅ 100 connections | ❌ Sandbox only |
+| Setup | ✅ Immediate access | ❌ Requires approval |
+| API Complexity | ✅ Simple | ⚠️ Complex |
+| Personal Use | ✅ Perfect | ⚠️ Production requires payment |
+| Developer Experience | ✅ Excellent | ⚠️ Good |
+
 ## Future Enhancements
 
 - [ ] Budget tracking and alerts
@@ -284,6 +291,24 @@ The built frontend will be served by the Express backend at http://localhost:300
 - [ ] Mobile app
 - [ ] Receipt upload and OCR
 - [ ] Investment account tracking
+- [ ] Bill payment reminders
+
+## Alternative: CSV Upload
+
+If you prefer not to use the Teller API, the app fully supports CSV uploads:
+
+1. Download transaction CSVs from your bank websites
+2. Click **"Upload CSV"** tab
+3. Select your bank or use auto-detect
+4. Upload the file
+5. Transactions are automatically categorized
+
+Supported CSV formats:
+- Bank of America
+- Chase
+- Discover
+- American Express
+- Generic CSV (with date, description, amount columns)
 
 ## License
 
@@ -292,6 +317,10 @@ MIT
 ## Support
 
 For issues or questions:
-- Check the Plaid documentation: https://plaid.com/docs
+- Check the Teller documentation: https://teller.io/docs
 - Review the troubleshooting section above
 - Open an issue on GitHub
+
+## Contributing
+
+This is a personal project, but contributions are welcome! Feel free to fork and submit pull requests.

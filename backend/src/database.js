@@ -22,7 +22,7 @@ db.exec(`
     account_type TEXT NOT NULL,
     account_id INTEGER,
     transaction_id TEXT,
-    pending INTEGER DEFAULT 0,
+    hash TEXT UNIQUE,
     original_data TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (account_id) REFERENCES connected_accounts(id) ON DELETE CASCADE
@@ -30,16 +30,14 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS connected_accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    item_id TEXT NOT NULL,
     access_token TEXT NOT NULL,
-    institution_id TEXT,
+    enrollment_id TEXT,
     institution_name TEXT NOT NULL,
     account_id TEXT NOT NULL,
     account_name TEXT,
     account_type TEXT,
     account_subtype TEXT,
     mask TEXT,
-    cursor TEXT,
     last_sync DATETIME,
     is_active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -66,8 +64,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_transactions_institution ON transactions(institution);
   CREATE INDEX IF NOT EXISTS idx_transactions_account_id ON transactions(account_id);
   CREATE INDEX IF NOT EXISTS idx_transactions_transaction_id ON transactions(transaction_id);
-  CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_unique ON transactions(transaction_id, account_id);
-  CREATE INDEX IF NOT EXISTS idx_connected_accounts_item_id ON connected_accounts(item_id);
+  CREATE INDEX IF NOT EXISTS idx_transactions_hash ON transactions(hash);
+  CREATE INDEX IF NOT EXISTS idx_connected_accounts_enrollment ON connected_accounts(enrollment_id);
 `);
 
 const defaultCategories = [
