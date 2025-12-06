@@ -75,15 +75,15 @@ npm run install-all
    TELLER_CERT_PATH=./certs/certificate.pem
    TELLER_KEY_PATH=./certs/private_key.pem
    TELLER_APPLICATION_ID=app_your_id_here
-   TELLER_ENV=production
+   TELLER_ENV=development
    PORT=3001
    NODE_ENV=development
    ```
 
    **Important:**
-   - Use `TELLER_ENV=production` to connect your REAL bank accounts (Bank of America, Chase, Discover, Amex, etc.)
+   - Use `TELLER_ENV=development` to connect your REAL bank accounts (not billed, 100 enrollment limit - **recommended for personal use**)
+   - Use `TELLER_ENV=production` for real bank data with billing
    - Use `TELLER_ENV=sandbox` only for testing with fake data
-   - This app is designed for local personal use with production mode
 
 ### 3. Start the Application
 
@@ -110,7 +110,7 @@ The application will be available at:
 
 ## Usage
 
-### Connecting Your Accounts (Production Mode)
+### Connecting Your Accounts (Development Mode)
 
 1. Open http://localhost:3000
 2. Click **"Connect Accounts"** tab
@@ -122,7 +122,7 @@ The application will be available at:
 8. Select which accounts to share (or all will be connected automatically)
 9. **That's it!** Your account connects automatically and transactions sync immediately
 
-**Security Note:** Your bank username and password are NEVER stored in this application. Teller Connect handles all authentication client-side using bank-level 256-bit encryption. Only an access token is stored locally to fetch your transactions. The entire authentication flow is handled securely by Teller's official JavaScript library.
+**Development Mode:** Uses real bank data but is **not billed** (100 enrollment limit - perfect for personal use). Your bank credentials are NEVER stored in this application. Teller Connect handles all authentication client-side using bank-level 256-bit encryption. Only an access token is stored locally to fetch your transactions.
 
 ### Syncing Transactions
 

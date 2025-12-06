@@ -58,7 +58,7 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
         try {
           const tc = window.TellerConnect.setup({
             applicationId: 'app_plt7tkg920bf7jh9ba000',
-            environment: 'production', // Use production for real bank accounts
+            environment: 'development', // Use development for real bank accounts (not billed, 100 enrollments)
             products: ['transactions', 'balance', 'identity'],
             onSuccess: async (enrollment) => {
               console.log('Teller Connect successful:', enrollment)
@@ -198,7 +198,7 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
       </div>
 
       <div style={{ marginBottom: '2rem', padding: '1rem', background: '#e3f2fd', borderRadius: '8px', border: '1px solid #2196f3' }}>
-        <h3 style={{ marginBottom: '0.5rem', color: '#1976d2' }}>How to Connect (Production Mode):</h3>
+        <h3 style={{ marginBottom: '0.5rem', color: '#1976d2' }}>How to Connect (Development Mode):</h3>
         <ol style={{ paddingLeft: '1.5rem', lineHeight: '1.8' }}>
           <li>Click <strong>"+ Connect New Account"</strong> button above</li>
           <li>Teller Connect window will open</li>
@@ -209,7 +209,7 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
           <li>Your account will connect automatically and transactions will sync!</li>
         </ol>
         <p style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-          <strong>Security:</strong> Your bank credentials are NEVER stored in this app. Teller handles all authentication using bank-level 256-bit encryption. Only an access token is stored locally. This app runs entirely on your machine.
+          <strong>Development Mode:</strong> Uses real bank data but is not billed (100 enrollment limit). Your credentials are NEVER stored. Teller handles authentication using bank-level 256-bit encryption. Only an access token is stored locally.
         </p>
       </div>
 
