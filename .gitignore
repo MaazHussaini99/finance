@@ -7,6 +7,11 @@ node_modules/
 .env.local
 .env.*.local
 
+# Teller SSL Certificates (sensitive!)
+backend/certs/*.pem
+backend/certs/certificate.pem
+backend/certs/private_key.pem
+
 # Database
 backend/data/*.db
 backend/data/*.db-shm

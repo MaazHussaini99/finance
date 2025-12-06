@@ -40,31 +40,42 @@ cd finance
 npm run install-all
 ```
 
-### 2. Set Up Teller API Credentials
+### 2. Set Up Teller SSL Certificates
 
 1. **Sign up for Teller:**
    - Visit: https://teller.io
    - Create a free account
 
-2. **Get your API key:**
-   - Go to your Teller dashboard
-   - Navigate to API Keys section
-   - Copy your API key
+2. **Download your SSL certificates:**
+   - Go to your Teller dashboard: https://teller.io/dashboard
+   - Navigate to "API Certificates" or "Application" section
+   - Download both files:
+     - `certificate.pem`
+     - `private_key.pem`
 
-3. **Create environment file:**
+3. **Place certificates in the project:**
+   ```bash
+   # Move your downloaded certificates to the backend/certs directory
+   mv ~/Downloads/certificate.pem backend/certs/
+   mv ~/Downloads/private_key.pem backend/certs/
+   ```
 
-```bash
-cd backend
-cp .env.example .env
-```
+4. **Create environment file:**
+   ```bash
+   cd backend
+   cp .env.example .env
+   ```
 
-4. **Edit `backend/.env` and add your Teller credentials:**
+5. **Edit `backend/.env`:**
+   ```env
+   TELLER_CERT_PATH=./certs/certificate.pem
+   TELLER_KEY_PATH=./certs/private_key.pem
+   TELLER_ENV=sandbox
+   PORT=3001
+   NODE_ENV=development
+   ```
 
-```env
-TELLER_API_KEY=your_teller_api_key_here
-PORT=3001
-NODE_ENV=development
-```
+   **Note:** Use `sandbox` for testing or `production` for real data
 
 ### 3. Start the Application
 
@@ -221,20 +232,36 @@ finance/
 
 ## Security
 
+- **mTLS Authentication**: Uses mutual TLS with SSL certificates for secure API communication
+- **Certificate-based**: Your certificate.pem and private_key.pem authenticate your application
 - All bank credentials are handled securely by Teller (never stored in this app)
 - Access tokens are stored in local SQLite database
 - Teller uses bank-level 256-bit encryption
 - OAuth connections when available
 - Multi-factor authentication supported
 
+**Certificate Security:**
+- Keep your `certificate.pem` and `private_key.pem` files secure
+- Never commit them to git (already in .gitignore)
+- Treat them like passwords - they authenticate your app to Teller
+
 ## Troubleshooting
 
 ### Teller Connection Issues
 
+If you see "Failed to load Teller SSL certificates":
+1. Check that `certificate.pem` and `private_key.pem` are in `backend/certs/`
+2. Verify the file names are exactly: `certificate.pem` and `private_key.pem`
+3. Ensure `.env` has correct paths:
+   ```env
+   TELLER_CERT_PATH=./certs/certificate.pem
+   TELLER_KEY_PATH=./certs/private_key.pem
+   ```
+
 If you see "Failed to save enrollment":
-1. Check that your `.env` file has the correct `TELLER_API_KEY`
-2. Verify your Teller account is active
-3. Ensure the access token was copied correctly
+1. Verify your certificates are valid and not expired
+2. Check that your Teller account is active
+3. Ensure the access token was copied correctly from Teller Connect
 
 ### Database Issues
 

@@ -1,0 +1,5 @@
+# Place your Teller certificate files here:
+# - certificate.pem
+# - private_key.pem
+#
+# Get these from: https://teller.io/dashboard
