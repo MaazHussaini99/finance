@@ -66,10 +66,15 @@ npm run install-all
    cp .env.example .env
    ```
 
-5. **Edit `backend/.env`:**
+5. **Get your Application ID:**
+   - In Teller dashboard, go to the "Application" section
+   - Copy your **Application ID** (it looks like `app_xxxxx`)
+
+6. **Edit `backend/.env`:**
    ```env
    TELLER_CERT_PATH=./certs/certificate.pem
    TELLER_KEY_PATH=./certs/private_key.pem
+   TELLER_APPLICATION_ID=app_your_id_here
    TELLER_ENV=sandbox
    PORT=3001
    NODE_ENV=development

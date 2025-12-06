@@ -25,9 +25,17 @@ function ConnectAccount({ onSuccess }: ConnectAccountProps) {
     }
   }
 
-  const handleConnectClick = () => {
-    window.open('https://teller.io/connect', '_blank', 'width=500,height=700')
-    setShowTokenInput(true)
+  const handleConnectClick = async () => {
+    try {
+      const { enrollment_url } = await api.teller.createEnrollment()
+      window.open(enrollment_url, '_blank', 'width=500,height=700')
+      setShowTokenInput(true)
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: 'Failed to create enrollment. Make sure TELLER_APPLICATION_ID is set in backend/.env'
+      })
+    }
   }
 
   const handleSaveToken = async () => {
