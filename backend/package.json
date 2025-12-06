@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "update-rules": "node src/updateCategorizationRules.js",
+    "recategorize": "node src/recategorizeTransactions.js"
   },
   "dependencies": {
     "express": "^4.18.2",

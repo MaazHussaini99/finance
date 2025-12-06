@@ -212,4 +212,35 @@ router.delete('/:id', (req, res) => {
   }
 });
 
+// Recategorize all transactions with current rules
+router.post('/recategorize', (req, res) => {
+  try {
+    // Reload rules from database
+    categorizer.rules = categorizer.loadRules();
+
+    // Get all transactions
+    const getStmt = db.prepare('SELECT id, description FROM transactions');
+    const transactions = getStmt.all();
+
+    // Update each transaction's category
+    const updateStmt = db.prepare('UPDATE transactions SET category = ? WHERE id = ?');
+
+    let updatedCount = 0;
+    transactions.forEach(transaction => {
+      const newCategory = categorizer.categorize(transaction.description);
+      updateStmt.run(newCategory, transaction.id);
+      updatedCount++;
+    });
+
+    res.json({
+      success: true,
+      message: `Recategorized ${updatedCount} transactions`,
+      count: updatedCount
+    });
+  } catch (error) {
+    console.error('Error recategorizing transactions:', error);
+    res.status(500).json({ error: 'Failed to recategorize transactions' });
+  }
+});
+
 module.exports = router;

@@ -1,94 +1,19 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
+#!/usr/bin/env node
+/**
+ * Script to update categorization rules in the database
+ * This will clear old rules and insert the comprehensive new rules
+ */
 
-// Ensure data directory exists
-const dataDir = path.join(__dirname, '../data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
+const db = require('./database');
 
-const dbPath = path.join(dataDir, 'transactions.db');
-const db = new Database(dbPath);
+console.log('Updating categorization rules...');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT NOT NULL,
-    description TEXT NOT NULL,
-    amount REAL NOT NULL,
-    category TEXT,
-    institution TEXT NOT NULL,
-    account_type TEXT NOT NULL,
-    account_id INTEGER,
-    transaction_id TEXT,
-    hash TEXT UNIQUE,
-    original_data TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (account_id) REFERENCES connected_accounts(id) ON DELETE CASCADE
-  );
+// Clear existing rules
+const deleteStmt = db.prepare('DELETE FROM categorization_rules');
+const deleted = deleteStmt.run();
+console.log(`✓ Deleted ${deleted.changes} old rules`);
 
-  CREATE TABLE IF NOT EXISTS connected_accounts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    access_token TEXT NOT NULL,
-    enrollment_id TEXT,
-    institution_name TEXT NOT NULL,
-    account_id TEXT NOT NULL,
-    account_name TEXT,
-    account_type TEXT,
-    account_subtype TEXT,
-    mask TEXT,
-    last_sync DATETIME,
-    is_active INTEGER DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    color TEXT DEFAULT '#3b82f6',
-    icon TEXT DEFAULT '📁',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS categorization_rules (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pattern TEXT NOT NULL,
-    category TEXT NOT NULL,
-    priority INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
-  CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category);
-  CREATE INDEX IF NOT EXISTS idx_transactions_institution ON transactions(institution);
-  CREATE INDEX IF NOT EXISTS idx_transactions_account_id ON transactions(account_id);
-  CREATE INDEX IF NOT EXISTS idx_transactions_transaction_id ON transactions(transaction_id);
-  CREATE INDEX IF NOT EXISTS idx_transactions_hash ON transactions(hash);
-  CREATE INDEX IF NOT EXISTS idx_connected_accounts_enrollment ON connected_accounts(enrollment_id);
-`);
-
-const defaultCategories = [
-  { name: 'Groceries', color: '#10b981', icon: '🛒' },
-  { name: 'Dining', color: '#f59e0b', icon: '🍽️' },
-  { name: 'Transportation', color: '#3b82f6', icon: '🚗' },
-  { name: 'Shopping', color: '#ec4899', icon: '🛍️' },
-  { name: 'Entertainment', color: '#8b5cf6', icon: '🎬' },
-  { name: 'Bills & Utilities', color: '#ef4444', icon: '💡' },
-  { name: 'Healthcare', color: '#06b6d4', icon: '🏥' },
-  { name: 'Travel', color: '#14b8a6', icon: '✈️' },
-  { name: 'Income', color: '#22c55e', icon: '💰' },
-  { name: 'Other', color: '#6b7280', icon: '📌' }
-];
-
-const insertCategory = db.prepare(`
-  INSERT OR IGNORE INTO categories (name, color, icon) VALUES (?, ?, ?)
-`);
-
-defaultCategories.forEach(cat => {
-  insertCategory.run(cat.name, cat.color, cat.icon);
-});
-
+// Insert comprehensive new rules
 const defaultRules = [
   // Groceries - comprehensive grocery store patterns
   {
@@ -223,8 +148,6 @@ const defaultRules = [
     priority: 10
   },
 
-  // Additional categories with high-priority patterns
-
   // Subscriptions (separate from Entertainment for better tracking)
   {
     pattern: 'subscription|monthly membership|annual fee|membership dues',
@@ -258,11 +181,18 @@ const defaultRules = [
 ];
 
 const insertRule = db.prepare(`
-  INSERT OR IGNORE INTO categorization_rules (pattern, category, priority) VALUES (?, ?, ?)
+  INSERT INTO categorization_rules (pattern, category, priority) VALUES (?, ?, ?)
 `);
 
+let insertedCount = 0;
 defaultRules.forEach((rule) => {
   insertRule.run(rule.pattern, rule.category, rule.priority);
+  insertedCount++;
 });
 
-module.exports = db;
+console.log(`✓ Inserted ${insertedCount} new comprehensive rules`);
+console.log('\nRules updated successfully!');
+console.log('\nNext steps:');
+console.log('1. Restart your backend server to reload the rules');
+console.log('2. Visit the app and your transactions will be categorized with the new rules');
+console.log('3. To recategorize existing transactions, run: npm run recategorize');
