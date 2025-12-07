@@ -126,7 +126,8 @@ router.post('/sync/:accountId', async (req, res) => {
         .update(`${transaction.date}-${transaction.description}-${transaction.amount}-${account.account_id}`)
         .digest('hex');
 
-      const category = categorizer.categorize(transaction.description);
+      // Use async categorization with AI fallback
+      const category = await categorizer.categorize(transaction.description, parseFloat(transaction.amount));
 
       try {
         insertStmt.run(

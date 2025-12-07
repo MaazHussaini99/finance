@@ -1,5 +1,6 @@
 const db = require('./database');
 const natural = require('natural');
+const aiCategorizer = require('./aiCategorizer');
 
 const tokenizer = new natural.WordTokenizer();
 const TfIdf = natural.TfIdf;
@@ -7,6 +8,7 @@ const TfIdf = natural.TfIdf;
 class TransactionCategorizer {
   constructor() {
     this.rules = this.loadRules();
+    this.useAI = process.env.USE_AI_CATEGORIZATION !== 'false'; // Enabled by default if API key is set
   }
 
   loadRules() {
@@ -14,7 +16,10 @@ class TransactionCategorizer {
     return stmt.all();
   }
 
-  categorize(description) {
+  /**
+   * Categorize using rule-based matching
+   */
+  categorizeWithRules(description) {
     const lowerDesc = description.toLowerCase();
 
     for (const rule of this.rules) {
@@ -26,13 +31,62 @@ class TransactionCategorizer {
       }
     }
 
+    return null; // No match found
+  }
+
+  /**
+   * Hybrid categorization: Rules first, then AI fallback
+   */
+  async categorize(description, amount = null) {
+    // Try rules first (fast and free)
+    const ruleCategory = this.categorizeWithRules(description);
+    if (ruleCategory) {
+      return ruleCategory;
+    }
+
+    // Fallback to AI if enabled and no rule matched
+    if (this.useAI && aiCategorizer.enabled) {
+      const aiCategory = await aiCategorizer.categorize(description, amount);
+      if (aiCategory) {
+        return aiCategory;
+      }
+    }
+
+    // Last resort
     return 'Other';
   }
 
+  /**
+   * Synchronous categorize for backwards compatibility
+   * Use this when you can't use async/await
+   */
+  categorizeSync(description) {
+    const ruleCategory = this.categorizeWithRules(description);
+    return ruleCategory || 'Other';
+  }
+
+  /**
+   * Batch categorize (async version with AI support)
+   */
+  async categorizeBatchAsync(transactions) {
+    const results = [];
+    for (const transaction of transactions) {
+      const category = await this.categorize(transaction.description, transaction.amount);
+      results.push({
+        ...transaction,
+        category
+      });
+    }
+    return results;
+  }
+
+  /**
+   * Synchronous batch categorize (backwards compatibility)
+   */
   categorizeBatch(transactions) {
     return transactions.map(transaction => ({
       ...transaction,
-      category: this.categorize(transaction.description)
+      category: this.categorizeSync(transaction.description)
     }));
   }
 

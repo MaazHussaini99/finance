@@ -212,29 +212,29 @@ router.delete('/:id', (req, res) => {
   }
 });
 
-// Recategorize all transactions with current rules
-router.post('/recategorize', (req, res) => {
+// Recategorize all transactions with current rules and AI
+router.post('/recategorize', async (req, res) => {
   try {
     // Reload rules from database
     categorizer.rules = categorizer.loadRules();
 
     // Get all transactions
-    const getStmt = db.prepare('SELECT id, description FROM transactions');
+    const getStmt = db.prepare('SELECT id, description, amount FROM transactions');
     const transactions = getStmt.all();
 
-    // Update each transaction's category
+    // Update each transaction's category using AI-enhanced categorization
     const updateStmt = db.prepare('UPDATE transactions SET category = ? WHERE id = ?');
 
     let updatedCount = 0;
-    transactions.forEach(transaction => {
-      const newCategory = categorizer.categorize(transaction.description);
+    for (const transaction of transactions) {
+      const newCategory = await categorizer.categorize(transaction.description, transaction.amount);
       updateStmt.run(newCategory, transaction.id);
       updatedCount++;
-    });
+    }
 
     res.json({
       success: true,
-      message: `Recategorized ${updatedCount} transactions`,
+      message: `Recategorized ${updatedCount} transactions with AI-enhanced categorization`,
       count: updatedCount
     });
   } catch (error) {

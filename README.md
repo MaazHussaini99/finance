@@ -5,12 +5,35 @@ A full-stack personal finance web application for automatically categorizing and
 ## Features
 
 - **Real-time Bank Integration**: Connect Bank of America, Chase, Discover, American Express, and 11,000+ other institutions via Teller API
-- **Automatic Categorization**: Smart categorization engine that automatically sorts transactions into predefined categories
+- **AI-Powered Categorization**: Hybrid categorization using 100+ pattern rules + OpenAI GPT-4o-mini for intelligent fallback
 - **Monthly Breakdown**: View spending by category for each month
 - **Dashboard**: Comprehensive overview of all transactions with editing capabilities
 - **CSV Upload**: Fallback option to manually upload transaction CSV files
 - **Auto-sync**: Transactions automatically sync every 6 hours
 - **Duplicate Detection**: Prevents importing the same transaction twice
+- **Smart Caching**: AI categorization results are cached to minimize API costs
+
+## Categorization System
+
+This app uses a **hybrid categorization system** for maximum accuracy and cost-effectiveness:
+
+### 1. Rule-Based Categorization (Primary)
+- **100+ merchant patterns** across all major categories
+- Covers most common transactions (groceries, dining, gas, shopping, etc.)
+- Fast and free - no API costs
+- Matches ~70-80% of transactions automatically
+
+### 2. AI-Powered Categorization (Fallback)
+- **OpenAI GPT-4o-mini** for intelligent categorization
+- Only used when rule-based matching fails
+- Understands context and unusual transaction descriptions
+- Extremely cost-effective: ~$0.15 per 1000 transactions
+- Results are cached to avoid duplicate API calls
+
+### Example Workflow:
+1. Transaction: "AMZN MKTP US" → **Rules match** → Shopping ✅
+2. Transaction: "LOCAL FARMERS MKT" → **No rule match** → AI analyzes → Groceries ✅
+3. Same "LOCAL FARMERS MKT" next month → **Cache hit** → Groceries ✅ (no API call)
 
 ## Tech Stack
 
@@ -18,7 +41,8 @@ A full-stack personal finance web application for automatically categorizing and
 - Node.js + Express
 - SQLite database
 - Teller API for bank connections
-- Natural language processing for categorization
+- OpenAI GPT-4o-mini for AI-powered categorization
+- Hybrid rule-based + AI categorization system
 
 **Frontend:**
 - React + TypeScript
@@ -84,6 +108,16 @@ npm run install-all
    - Use `TELLER_ENV=development` to connect your REAL bank accounts (not billed, 100 enrollment limit - **recommended for personal use**)
    - Use `TELLER_ENV=production` for real bank data with billing
    - Use `TELLER_ENV=sandbox` only for testing with fake data
+
+7. **(Optional but Recommended) Enable AI Categorization:**
+   - Get an OpenAI API key from: https://platform.openai.com/api-keys
+   - Add it to your `backend/.env` file:
+   ```env
+   OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
+   USE_AI_CATEGORIZATION=true
+   ```
+   - Cost: ~$0.15 per 1000 transactions with GPT-4o-mini
+   - Without this, the app will still work great with rule-based categorization only
 
 ### 3. Start the Application
 

@@ -59,6 +59,12 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS ai_category_cache (
+    description TEXT PRIMARY KEY,
+    category TEXT NOT NULL,
+    last_used DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
   CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category);
   CREATE INDEX IF NOT EXISTS idx_transactions_institution ON transactions(institution);
