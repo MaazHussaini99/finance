@@ -3,8 +3,9 @@ import ConnectAccount from './components/ConnectAccount'
 import Upload from './components/Upload'
 import Dashboard from './components/Dashboard'
 import MonthlyBreakdown from './components/MonthlyBreakdown'
+import MonthlyInsights from './components/MonthlyInsights'
 
-type View = 'connect' | 'upload' | 'dashboard' | 'monthly'
+type View = 'connect' | 'upload' | 'dashboard' | 'monthly' | 'insights'
 
 function App() {
   const [currentView, setCurrentView] = useState<View>('connect')
@@ -23,6 +24,12 @@ function App() {
             onClick={() => setCurrentView('connect')}
           >
             Connect Accounts
+          </button>
+          <button
+            className={currentView === 'insights' ? 'active' : ''}
+            onClick={() => setCurrentView('insights')}
+          >
+            Monthly Insights
           </button>
           <button
             className={currentView === 'dashboard' ? 'active' : ''}
@@ -44,7 +51,8 @@ function App() {
           </button>
         </nav>
 
-        {currentView === 'connect' && <ConnectAccount onSuccess={() => setCurrentView('dashboard')} />}
+        {currentView === 'connect' && <ConnectAccount onSuccess={() => setCurrentView('insights')} />}
+        {currentView === 'insights' && <MonthlyInsights />}
         {currentView === 'upload' && <Upload />}
         {currentView === 'dashboard' && <Dashboard />}
         {currentView === 'monthly' && <MonthlyBreakdown />}

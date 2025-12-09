@@ -50,6 +50,11 @@ export const api = {
     delete: async (id: number): Promise<{ success: boolean; message: string }> => {
       const response = await axios.delete(`${API_BASE}/transactions/${id}`)
       return response.data
+    },
+
+    getInsights: async (): Promise<any[]> => {
+      const response = await axios.get(`${API_BASE}/transactions/insights`)
+      return response.data
     }
   },
 

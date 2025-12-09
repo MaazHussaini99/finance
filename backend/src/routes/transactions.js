@@ -243,4 +243,51 @@ router.post('/recategorize', async (req, res) => {
   }
 });
 
+// Get monthly insights (income, expenses, balance)
+router.get('/insights', (req, res) => {
+  try {
+    const query = `
+      SELECT
+        strftime('%Y-%m', date) as month,
+        strftime('%Y', date) as year,
+        strftime('%m', date) as month_num,
+        SUM(CASE WHEN category = 'Income' THEN amount ELSE 0 END) as income,
+        SUM(CASE WHEN category != 'Income' AND amount < 0 THEN ABS(amount) ELSE 0 END) as expenses,
+        SUM(CASE WHEN category = 'Income' THEN amount ELSE amount END) as net_change,
+        COUNT(*) as transaction_count,
+        COUNT(CASE WHEN category = 'Income' THEN 1 END) as income_count,
+        COUNT(CASE WHEN category != 'Income' THEN 1 END) as expense_count
+      FROM transactions
+      GROUP BY month
+      ORDER BY month DESC
+    `;
+
+    const stmt = db.prepare(query);
+    const insights = stmt.all();
+
+    // Calculate running balance
+    let runningBalance = 0;
+    const insightsWithBalance = insights.reverse().map(insight => {
+      runningBalance += insight.net_change;
+      return {
+        month: insight.month,
+        year: parseInt(insight.year),
+        month_num: parseInt(insight.month_num),
+        income: Math.abs(insight.income),
+        expenses: insight.expenses,
+        net_change: insight.net_change,
+        ending_balance: runningBalance,
+        transaction_count: insight.transaction_count,
+        income_count: insight.income_count,
+        expense_count: insight.expense_count
+      };
+    }).reverse();
+
+    res.json(insightsWithBalance);
+  } catch (error) {
+    console.error('Error fetching insights:', error);
+    res.status(500).json({ error: 'Failed to fetch insights' });
+  }
+});
+
 module.exports = router;
